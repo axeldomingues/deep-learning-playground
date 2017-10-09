@@ -130,7 +130,7 @@ def main():
   argmax_prediction = tf.argmax(y_ff, 1)
   argmax_y = tf.argmax(y_, 1)
   
-  batch_sz = 200
+  batch_sz = 500
   partition_sz = 1000000 #1 million records will be loaded at each time for train
   
   n_partitions = N // partition_sz
@@ -142,13 +142,13 @@ def main():
     sess.run(tf.global_variables_initializer())
     start_time = timer()
     for i in range(30):# 150 epochs
-      train_dk_chunks = shuffle(train_dk_chunks)
+      train_dk_chunks = shuffle(train_dk_chunks) #Since there is no good way of shuffling the whole out of core big data this is the best approach
       train_dk_array = da.concatenate(train_dk_chunks, axis=0)
       for p in range(n_partitions):
 	    #Preparing the training partition
         print('Partition %g' % (p))
         trainingData = train_dk_array[p*partition_sz:(p*partition_sz+partition_sz)].compute()
-        np.random.shuffle(trainingData)
+        np.random.shuffle(trainingData) # More efficient way of shuffling in-place
         Xtrain, Ytrain= trainingData[:,1:], trainingData[:,0]
         del trainingData
         Ytrain = y2indicator(Ytrain.astype(np.int)).astype(np.float32)
